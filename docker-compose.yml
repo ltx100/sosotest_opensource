@@ -1,0 +1,56 @@
+version: '3'
+services:
+  # mysql
+  mysql:
+    container_name: mysql
+    build:
+      context: ./install/mysql
+      dockerfile: Dockerfile
+    command: [
+      '--character-set-server=utf8',
+      '--collation-server=utf8_general_ci',
+      '--default-authentication-plugin=mysql_native_password'
+    ]
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: "sosotest_atplatform"
+      MYSQL_ROOT_PASSWORD: "123456"
+    networks:
+      - backend
+  # redis
+  redis:
+    container_name: redis
+    build:
+      context: ./install/redis
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/data:/data
+    networks:
+      - backend
+  # sosotest
+  sosotest:
+    container_name: mysosotest
+    build:
+      context: .
+      dockerfile: ./install/sosotest/Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+      - "80:80"
+    depends_on:
+      - mysql
+      - redis
+    links:
+      - mysql
+      - redis
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
